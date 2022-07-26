@@ -1,8 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Unity.Mathematics;
+using Elements.Geometry;
 
 // static class to calculate the internal largest area rectangle of a simple polygon.
 //
@@ -36,28 +36,28 @@ namespace Evryway
     public static class LargestInteriorRectangle
     {
 
-        public static Vector2[] Vector3XZToVector2(IEnumerable<Vector3> vec3s_xz)
+        public static Vector3[] Vector3XZToVector3(IEnumerable<Vector3> vec3s_xz)
         {
             var c = vec3s_xz.Count();
-            var outv2 = new Vector2[c];
+            var outv2 = new Vector3[c];
             int i = 0;
             foreach (var v3 in vec3s_xz)
             {
-                var v2 = new Vector2(v3.x, v3.z);
+                var v2 = new Vector3(v3.X, v3.Z);
                 outv2[i] = v2;
                 i++;
             }
             return outv2;
         }
 
-        public static Vector3[] Vector2ToVector3XZ(IEnumerable<Vector2> vec2s, float y = 0)
+        public static Vector3[] Vector3ToVector3XZ(IEnumerable<Vector3> vec2s, double y = 0)
         {
             var c = vec2s.Count();
             var outv3 = new Vector3[c];
             int i = 0;
             foreach (var v2 in vec2s)
             {
-                var v3 = new Vector3(v2.x, y, v2.y);
+                var v3 = new Vector3(v2.X, y, v2.Y);
                 outv3[i] = v3;
                 i++;
             }
@@ -66,28 +66,28 @@ namespace Evryway
 
         // Calculate covariance matrix.
         // https://math.stackexchange.com/q/711886
-        public static float2x2 CovarianceMatrix(Vector2[] vec2s)
+        public static Double2x2 CovarianceMatrix(Vector3[] vec2s)
         {
             var n = vec2s.Length;
-            float xt = 0.0f, yt = 0.0f;
+            double xt = 0.0f, yt = 0.0f;
             for (int i = 0; i < n; i++)
             {
                 var v = vec2s[i];
-                xt += v.x;
-                yt += v.y;
+                xt += v.X;
+                yt += v.Y;
             }
             // x and y average values
-            float xmean = xt / n;
-            float ymean = yt / n;
+            double xmean = xt / n;
+            double ymean = yt / n;
 
-            //Debug.Log($"mean : {xmean} {ymean}");
+            //Console.WriteLine($"mean : {xmean} {ymean}");
 
-            float xvt = 0.0f, yvt = 0.0f, xycvt = 0.0f;
+            double xvt = 0.0f, yvt = 0.0f, xycvt = 0.0f;
             for (int i = 0; i < n; i++)
             {
                 var v = vec2s[i];
-                var xd = v.x - xmean;
-                var yd = v.y - ymean;
+                var xd = v.X - xmean;
+                var yd = v.Y - ymean;
 
                 xvt += xd * xd;
                 yvt += yd * yd;
@@ -99,19 +99,19 @@ namespace Evryway
             // this is population covariance vs sample covariance.
             // (see https://www.visiondummy.com/2014/03/divide-variance-n-1/ )
             var divis = n;      // n-1
-            float xvar = xvt / divis;
-            float yvar = yvt / divis;
-            float xycov = xycvt / divis;
+            double xvar = xvt / divis;
+            double yvar = yvt / divis;
+            double xycov = xycvt / divis;
 
-            //Debug.Log($"A : [ ({xvar} {xycov}) , ({xycov}, {yvar}) ]");
-            return new float2x2(xvar, xycov, xycov, yvar);
+            //Console.WriteLine($"A : [ ({xvar} {xycov}) , ({xycov}, {yvar}) ]");
+            return new Double2x2(xvar, xycov, xycov, yvar);
         }
 
         // take quadratic equation in form ax^2 + bx + c = 0
         // return roots (values of x) in x1 and x2
         // return true if solvable, false otherwise.
         // equation is https://en.wikipedia.org/wiki/Quadratic_formula
-        public static bool SolveQuadratic(float a, float b, float c, out float x1, out float x2)
+        public static bool SolveQuadratic(double a, double b, double c, out double x1, out double x2)
         {
             x1 = 0;
             x2 = 0;
@@ -121,7 +121,7 @@ namespace Evryway
             var part = (b * b) - (4 * a * c);
             // can't solve if part is negative (sqrt of negative number)
             if (part < 0) return false;
-            var psqrt = Mathf.Sqrt(part);
+            var psqrt = Math.Sqrt(part);
             x1 = (-b + psqrt) / (2 * a);
             x2 = (-b - psqrt) / (2 * a);
             return true;
@@ -147,18 +147,18 @@ namespace Evryway
         // vv - (trace(A))v + det(A) = 0
         // which is exactly as I've worked out above, given Trace(A) is a+d.
 
-        public static bool CalculateEigenValues(float2x2 mat, out float v1, out float v2)
+        public static bool CalculateEigenValues(Double2x2 mat, out double v1, out double v2)
         {
-            float a = mat.c0.x;
-            float b = mat.c1.x;
-            float c = mat.c0.y;
-            float d = mat.c1.y;
+            double a = mat.c0.x;
+            double b = mat.c1.x;
+            double c = mat.c0.y;
+            double d = mat.c1.y;
 
             // note - coming in as a covariance matrix, b and c are identical.
             // this solves the general (not necessarily covariance matrix) case.
-            float qa = 1;
-            float qb = -(a + d);
-            float qc = (a * d) - (b * c);
+            double qa = 1;
+            double qb = -(a + d);
+            double qc = (a * d) - (b * c);
             var ok = SolveQuadratic(qa, qb, qc, out v1, out v2);
             return ok;
         }
@@ -208,46 +208,46 @@ namespace Evryway
         // ONE of the two equations tends to BAD, and the other should be preferred.
         // see https://www.mathsisfun.com/algebra/eigenvalue.html
 
-        public static Vector2 CalculateEigenVector(float2x2 A, float eigenvalue)
+        public static Vector3 CalculateEigenVector(Double2x2 A, double eigenvalue)
         {
-            float v = eigenvalue;
-            float a = A.c0.x;
-            float b = A.c1.x;
-            float c = A.c0.y;
-            float d = A.c1.y;
+            double v = eigenvalue;
+            double a = A.c0.x;
+            double b = A.c1.x;
+            double c = A.c0.y;
+            double d = A.c1.y;
 
             // decide which equation to use, based on mag of variance (XX, YY)
             // against the eigenvector - we don't want a near-zero value here!
-            var aq = Mathf.Abs(a - v);
-            var dq = Mathf.Abs(d - v);
+            var aq = Math.Abs(a - v);
+            var dq = Math.Abs(d - v);
             var numer = (aq > dq) ? b : (v - d);
             var denom = (aq > dq) ? (v - a) : c;
-            var dok = Mathf.Abs(denom) > Mathf.Epsilon;
+            var dok = Math.Abs(denom) > Vector3.EPSILON;
             var x = dok ? numer / denom : 1.0f;
             var y = dok ? 1 : 0;
 
             // as eigenvectors can point either way down the eigenspace, let's
             // go for ALWAYS POSITIVE X.
             if (x < 0) { x = -x; y = -y; }
-            return new Vector2(x, y).normalized;
+            return new Vector3(x, y).Unitized();
         }
 
 
-        public static bool CalculatePrimaryAxis(Vector2[] vs, out Vector2 axis, out float eigenvalue)
+        public static bool CalculatePrimaryAxis(Vector3[] vs, out Vector3 axis, out double eigenvalue)
         {
             // default to x-axis as primary axis.
-            axis = Vector2.right;
+            axis = Vector3.XAxis;
             eigenvalue = 1.0f;
 
             var A = CovarianceMatrix(vs);
-            var ok = CalculateEigenValues(A, out float v1, out float v2);
+            var ok = CalculateEigenValues(A, out double v1, out double v2);
             if (!ok) return false;
 
-            //Debug.Log($"EigenValues: {v1} {v2}");
-            eigenvalue = Mathf.Max(Mathf.Abs(v1), Mathf.Abs(v2));
+            //Console.WriteLine($"EigenValues: {v1} {v2}");
+            eigenvalue = Math.Max(Math.Abs(v1), Math.Abs(v2));
             // use largest magnitude eigenvalue to calculate an eigenvector.
             axis = CalculateEigenVector(A, eigenvalue);
-            //Debug.Log($"Vector: ({axis.x}, {axis.y}) for EigenValue {eigenvalue}");
+            //Console.WriteLine($"Vector: ({axis.x}, {axis.y}) for EigenValue {eigenvalue}");
 
             return true;
         }
@@ -255,34 +255,34 @@ namespace Evryway
         // Calculate convex polygon area.
         // Uses shoelace algo.
         // https://erkaman.github.io/posts/area_convex_polygon.html
-        public static float CalculateConvexPolygonArea(Vector2[] vs)
+        public static double CalculateConvexPolygonArea(Vector3[] vs)
         {
             var c = vs.Length;
-            float s = 0.0f;
+            double s = 0.0f;
             for (int i = 0; i < c; ++i)
             {
                 var v = vs[i];
                 var v2 = vs[(i + 1) % c];
-                s += (v.x * v2.y) - (v2.x * v.y);
+                s += (v.X * v2.Y) - (v2.X * v.Y);
             }
-            //Debug.Log($"polygon area : {s*0.5f}");
+            //Console.WriteLine($"polygon area : {s*0.5f}");
             return 0.5f * s;
         }
 
-        public static Vector2[] CalculateConcavePolygon(Vector2[] vs)
+        public static Vector3[] CalculateConcavePolygon(Vector3[] vs)
         {
             // step 1: find bottom-right point in vs.
             // minimum y (and optionally maximum x, if two or more min-y points are colinear with x-axis)
             var c = vs.Length;
 
 
-            Vector2 p0 = vs[0];
+            Vector3 p0 = vs[0];
             int idx = 0;
-            List<Vector2> vs_sorted = new List<Vector2> { p0 };
+            List<Vector3> vs_sorted = new List<Vector3> { p0 };
             for (int i = 1; i < c; i++)
             {
                 var pi = vs[i];
-                if ((pi.y < p0.y) || (pi.y == p0.y && pi.x > p0.x)) { p0 = pi; idx = i; }
+                if ((pi.Y < p0.Y) || (pi.Y == p0.Y && pi.X > p0.X)) { p0 = pi; idx = i; }
                 vs_sorted.Add(pi);
             }
 
@@ -296,10 +296,10 @@ namespace Evryway
                 // "on the left" (looking from above, anticlockwise)
                 // gives a positive value for d.
 
-                var p1x = p1.x - p0.x;
-                var p2x = p2.x - p0.x;
-                var p1y = p1.y - p0.y;
-                var p2y = p2.y - p0.y;
+                var p1x = p1.X - p0.X;
+                var p2x = p2.X - p0.X;
+                var p1y = p1.Y - p0.Y;
+                var p2y = p2.Y - p0.Y;
 
 
                 var d = (p1x * p2y) - (p2x * p1y);
@@ -324,20 +324,20 @@ namespace Evryway
 
         // Calculate the convex hull, given a point set.
         // Uses Graham Scan.
-        public static bool CalculateConvexHull(Vector2[] vs, out Vector2[] hull_vs)
+        public static bool CalculateConvexHull(Vector3[] vs, out Vector3[] hull_vs)
         {
-            if (vs.Length < 1) { hull_vs = new Vector2[0]; return false; }
+            if (vs.Length < 1) { hull_vs = new Vector3[0]; return false; }
 
 
             var vs_sorted = CalculateConcavePolygon(vs);
             var c = vs_sorted.Length;
 
-            //for (int i = 0; i < s_sorted.Count; i++) Debug.Log(vs_sorted[i]);
+            //for (int i = 0; i < s_sorted.Count; i++) Console.WriteLine(vs_sorted[i]);
 
 
             // we're ready to construct the convex hull.
 
-            Stack<Vector2> hull = new Stack<Vector2>();
+            Stack<Vector3> hull = new Stack<Vector3>();
             var v0 = vs_sorted[0];
             hull.Push(v0);
 
@@ -347,7 +347,7 @@ namespace Evryway
             {
                 var v = vs_sorted[second];
                 second++;
-                if ((v - v0).sqrMagnitude > 0)
+                if ((v - v0).LengthSquared() > 0)
                 {
                     hull.Push(v);
                     break;
@@ -362,7 +362,7 @@ namespace Evryway
             // c+1 gives us a duplicate start point at the end - this should ensure
             // we don't get any colinearity on the final edge.
             // we will remove the duplicate later.
-            for (int i = second; i < c+1; i++)
+            for (int i = second; i < c + 1; i++)
             {
                 var t = vs_sorted[(i % c)];
 
@@ -373,14 +373,14 @@ namespace Evryway
                     // we do NOT want duplicate vertices.
                     // push the new one (same as the old one)
                     // and move on to the next vert.
-                    if ((s - t) == Vector2.zero)
+                    if ((s - t) == (0, 0, 0))
                     {
                         break;
                     }
 
                     var r = hull.Peek();
 
-                    var d = ((s.x - r.x) * (t.y - r.y)) - ((t.x - r.x) * (s.y - r.y));
+                    var d = ((s.X - r.X) * (t.Y - r.Y)) - ((t.X - r.X) * (s.Y - r.Y));
 
                     // we must be POSITIVE (on the left).
                     // negative (on the right) means we want to continue back down the stack.
@@ -393,8 +393,8 @@ namespace Evryway
                     // we may also be a duplicate end/start degenerate case.
                     if (d == 0)
                     {
-                        var sm = (s - r).sqrMagnitude;
-                        var tm = (t - r).sqrMagnitude;
+                        var sm = (s - r).LengthSquared();
+                        var tm = (t - r).LengthSquared();
                         if (sm > tm)
                         {
                             t = s;                 // use s instead of t, as it's further away.
@@ -418,7 +418,7 @@ namespace Evryway
             }
 
             hull_vs = hull.Reverse().ToArray();
-            //Debug.Log(hull_vs.Length);
+            //Console.WriteLine(hull_vs.Length);
             return hull_vs.Length > 2;
         }
 
@@ -428,7 +428,7 @@ namespace Evryway
         // REQUIRED - no duplicate points, no colinearity.
         // REQUIRED - points are ordered counter-clockwise, +X is right, +Y is up.
         // uses rotating calipers algorithm.
-        public static bool CalculateSmallestEnclosingRectangle(Vector2[] vs, out Bound2D bound)
+        public static bool CalculateSmallestEnclosingRectangle(Vector3[] vs, out Bound2D bound)
         {
             var vs_area = CalculateConvexPolygonArea(vs);
             if (vs_area <= 0)
@@ -438,16 +438,16 @@ namespace Evryway
                 // size of axis_b is zero, centre is midpoint of the span, etc)?
                 // for now - no.
 
-                bound = new Bound2D(Vector2.zero, Vector2.right, Vector2.zero);
+                bound = new Bound2D(new Vector3(0, 0, 0), Vector3.XAxis, new Vector3(0, 0, 0));
                 return false;
             }
 
             // calculate default (AABB) bounding box.
             // unlikely to be the best, but a good starting point.
-            float minx = float.MaxValue;
-            float maxx = float.MinValue;
-            float miny = float.MaxValue;
-            float maxy = float.MinValue;
+            double minx = double.MaxValue;
+            double maxx = double.MinValue;
+            double miny = double.MaxValue;
+            double maxy = double.MinValue;
 
             // track the vertices that touch our initial 4 edges.
             // e0 is "bottom" edge (+X)
@@ -464,10 +464,10 @@ namespace Evryway
             for (int i = 0; i < c; i++)
             {
                 var v = vs[i];
-                if (v.x < minx) { minx = v.x; ie3 = i; }
-                if (v.x > maxx) { maxx = v.x; ie1 = i; }
-                if (v.y < miny) { miny = v.y; ie0 = i; }
-                if (v.y > maxy) { maxy = v.y; ie2 = i; }
+                if (v.X < minx) { minx = v.X; ie3 = i; }
+                if (v.X > maxx) { maxx = v.X; ie1 = i; }
+                if (v.Y < miny) { miny = v.Y; ie0 = i; }
+                if (v.Y > maxy) { maxy = v.Y; ie2 = i; }
             }
 
             // we now have the AABB bounds, and the indices of the vertices that
@@ -475,9 +475,9 @@ namespace Evryway
             var xd = maxx - minx;
             var yd = maxy - miny;
 
-            var axis = Vector2.right;
-            var size = new Vector2(xd, yd);
-            var centre = new Vector2(minx + (xd * 0.5f), miny + (yd * 0.5f));
+            var axis = Vector3.XAxis;
+            var size = new Vector3(xd, yd);
+            var centre = new Vector3(minx + (xd * 0.5f), miny + (yd * 0.5f));
             var bound_working = new Bound2D(centre, axis, size);
             bound = bound_working;
 
@@ -485,13 +485,13 @@ namespace Evryway
             // I have four points (indices ie0-ie3) which touch the four
             // edges.
 
-            float atot = 0.0f;
+            double atot = 0.0f;
             int passes = 0;
 
             //ensure we don't spin around too much.
-            while (atot < 90.0f && passes < (c*4))
+            while (atot < 90.0f && passes < (c * 4))
             {
-                //Debug.Log($"pass {passes} : {ie0} {ie1} {ie2} {ie3}, angle {atot}");
+                //Console.WriteLine($"pass {passes} : {ie0} {ie1} {ie2} {ie3}, angle {atot}");
 
                 // generate the "following" edge vector (from the point) for each of these vertices.
                 var fe0 = vs[(ie0 + 1) % c] - vs[ie0];
@@ -505,37 +505,37 @@ namespace Evryway
 
 
                 // check the size of the angle for each of these.
-                var a0 = Vector2.Angle(fe0, bound_working.axis_a);
-                var a1 = Vector2.Angle(fe1, bound_working.axis_b);
-                var a2 = Vector2.Angle(fe2, -bound_working.axis_a);
-                var a3 = Vector2.Angle(fe3, -bound_working.axis_b);
+                var a0 = fe0.AngleTo(bound_working.axis_a);
+                var a1 = fe1.AngleTo(bound_working.axis_b);
+                var a2 = fe2.AngleTo(bound_working.axis_a.Negate());
+                var a3 = fe3.AngleTo(bound_working.axis_b.Negate());
 
                 // calculate minimum angle.
-                var amin = Mathf.Min(a0, Mathf.Min(a1, Mathf.Min(a2, a3)));
+                var amin = Math.Min(a0, Math.Min(a1, Math.Min(a2, a3)));
 
-                //Debug.Log($"{a0} {a1} {a2} {a3} : min {amin}");
+                //Console.WriteLine($"{a0} {a1} {a2} {a3} : min {amin}");
 
                 // advance one of the edge-touching indices.
 
-                if (a0 == amin) ie0 = (ie0 + 1) % c;   
+                if (a0 == amin) ie0 = (ie0 + 1) % c;
                 else if (a1 == amin) ie1 = (ie1 + 1) % c;
                 else if (a2 == amin) ie2 = (ie2 + 1) % c;
-                else  ie3 = (ie3 + 1) % c;
+                else ie3 = (ie3 + 1) % c;
 
                 // could also re-calculate axis directly, rather than rotating - if we want less potential numerical error.
                 // more complicated for ie1 thru ie3 as we're calculating axis_b, -axis_a and -axis_b respectively,
                 // which need to be rotated to calculate axis_a into axis.
                 /*
                 if      (a0 == amin) { var ie0n = (ie0 + 1) % c; var edge = vs[ie0n] - vs[ie0]; axis = edge.normalized; ie0 = ie0n; }
-                else if (a1 == amin) { var ie1n = (ie1 + 1) % c; var edge = vs[ie1n] - vs[ie1]; axis = new Vector2(edge.y, -edge.x).normalized; ie1 = ie1n; }
+                else if (a1 == amin) { var ie1n = (ie1 + 1) % c; var edge = vs[ie1n] - vs[ie1]; axis = new Vector3(edge.y, -edge.x).normalized; ie1 = ie1n; }
                 else if (a2 == amin) { var ie2n = (ie2 + 1) % c; var edge = vs[ie2n] - vs[ie2]; axis = -edge.normalized; ie2 = ie2n; }
-                else                 { var ie3n = (ie3 + 1) % c; var edge = vs[ie3n] - vs[ie3]; axis = new Vector2(-edge.y, edge.x).normalized; ie3 = ie3n; }
+                else                 { var ie3n = (ie3 + 1) % c; var edge = vs[ie3n] - vs[ie3]; axis = new Vector3(-edge.y, edge.x).normalized; ie3 = ie3n; }
                  */
 
                 if (amin > 0)
                 {
                     axis = axis.Rotate(amin);
-                    var axis_b = new Vector2(-axis.y, axis.x);
+                    var axis_b = new Vector3(-axis.Y, axis.X);
 
                     // recalculate the bounds.
                     // ie0 touches axis_a (currently in axis) - on the "bottom" of the box.
@@ -553,30 +553,30 @@ namespace Evryway
 
                     // project e02 and e31 onto the respective axes, to find the length of
                     // the edge.
-                    xd = Vector2.Dot(e31, axis);
-                    yd = Vector2.Dot(e02, axis_b);
-                    size = new Vector2(xd, yd);
+                    xd = e31.Dot(axis);//Vector3.Dot(e31, axis);
+                    yd = e02.Dot(axis_b); //Vector3.Dot(e02, axis_b);
+                    size = new Vector3(xd, yd);
 
                     // calculate some corners, and average for the centre.
                     var q01 = v1 - v0;
                     var q03 = v3 - v0;
-                    var c01 = (Vector2.Dot(q01, axis) * axis) + v0;
-                    var c30 = (Vector2.Dot(q03, axis) * axis) + v0;
+                    var c01 = (q01.Dot(axis) * axis) + v0; // (Vector3.Dot(q01, axis) * axis) + v0;
+                    var c30 = (q03.Dot(axis) * axis) + v0;// (Vector3.Dot(q03, axis) * axis) + v0;
 
                     var q21 = v1 - v2;
                     var q23 = v3 - v2;
-                    var c12 = (Vector2.Dot(q21, -axis) * -axis) + v2;
-                    var c23 = (Vector2.Dot(q23, -axis) * -axis) + v2;
+                    var c12 = (q21.Dot(axis.Negate()) * axis.Negate()) + v2; //(Vector3.Dot(q21, axis.Negate()) * axis.Negate()) + v2;
+                    var c23 = (q23.Dot(axis.Negate()) * axis.Negate()) + v2; //(Vector3.Dot(q23, axis.Negate()) * axis.Negate()) + v2;
 
 
-                    centre = (c01+c12+c23+c30) * 0.25f;
+                    centre = (c01 + c12 + c23 + c30) * 0.25f;
                     bound_working = new Bound2D(centre, axis, size);
 
-                    //Debug.Log($"new area : {bound_working.area}");
+                    //Console.WriteLine($"new area : {bound_working.area}");
 
                     if (bound_working.area < bound.area)
                     {
-                        //Debug.Log("better match.");
+                        //Console.WriteLine("better match.");
                         bound = bound_working;
                     }
                 }
@@ -585,7 +585,7 @@ namespace Evryway
                     // angle is zero - a previous rotation has caused more than one edge
                     // to touch our bounding box. don't rotate, simply move that point
                     // up, along the second edge.
-                    //Debug.Log("skipping a point ...");
+                    //Console.WriteLine("skipping a point ...");
                 }
 
                 // and on ...
@@ -595,7 +595,7 @@ namespace Evryway
 
             // ensure bound is set such that longest axis is axis_a
             bound.AlignMajor();
-            
+
             return true;
         }
 
@@ -608,7 +608,7 @@ namespace Evryway
         // REQUIRED - all points in vs fit inside ser.
         // REQUIRED - vs contains points such that a convex hull constructed from vs is minimally contained by ser.
 
-        public static bool ConvertFromSERToCAABB(Vector2[] vs, Bound2D ser, out Vector2[] vs_orient, out Bound2D caabb)
+        public static bool ConvertFromSERToCAABB(Vector3[] vs, Bound2D ser, out Vector3[] vs_orient, out Bound2D caabb)
         {
 
             // no-op output.
@@ -624,12 +624,12 @@ namespace Evryway
             var c = vs.Length;
             var centre = ser.centre;
             var angle = ser.angle;
-            vs_orient = new Vector2[c];
+            vs_orient = new Vector3[c];
             for (int i = 0; i < c; i++)
             {
                 vs_orient[i] = (vs[i] - centre).Rotate(-angle);
             }
-            caabb = new Bound2D(Vector2.zero, Vector2.right, ser.size);
+            caabb = new Bound2D(new Vector3(0, 0, 0), Vector3.XAxis, ser.size);
 
             return true;
         }
@@ -639,7 +639,7 @@ namespace Evryway
         // REQUIRED - ordered polygon points array in vs (does not need to be convex, DOES need to be ordered
         // as a simple polygon)
 
-        public static bool CalculateInteriorCells(Vector2[] vs, out float[] xs, out float[] ys, out int[,] cells)
+        public static bool CalculateInteriorCells(Vector3[] vs, out double[] xs, out double[] ys, out int[,] cells)
         {
 
             var vc = vs.Length;
@@ -652,31 +652,31 @@ namespace Evryway
 
             // this variant clamps with an epsilon, to ensure the math doesn't get too wacky.
 
-            var xsl = new List<float>(vs.Length);
-            var ysl = new List<float>(vs.Length);
+            var xsl = new List<double>(vs.Length);
+            var ysl = new List<double>(vs.Length);
             for (int i = 0; i < vs.Length; i++)
             {
                 var v = vs[i];
-                xsl.Add(v.x);
-                ysl.Add(v.y);
+                xsl.Add(v.X);
+                ysl.Add(v.Y);
             }
             xsl.Sort();
             ysl.Sort();
 
             // de-dupe - including epsilon.
 
-            float xmin = xsl[0];
-            float xmax = xsl[xsl.Count - 1];
-            float ymin = ysl[0];
-            float ymax = ysl[ysl.Count - 1];
-            float mmin = Mathf.Min(xmin, ymin);
-            float mmax = Mathf.Max(xmax, ymax);
+            double xmin = xsl[0];
+            double xmax = xsl[xsl.Count - 1];
+            double ymin = ysl[0];
+            double ymax = ysl[ysl.Count - 1];
+            double mmin = Math.Min(xmin, ymin);
+            double mmax = Math.Max(xmax, ymax);
 
-            var xsd = new List<float>(vs.Length) { xsl[0] };
-            var ysd = new List<float>(vs.Length) { ysl[0] };
+            var xsd = new List<double>(vs.Length) { xsl[0] };
+            var ysd = new List<double>(vs.Length) { ysl[0] };
 
-            float epsilon = (mmax - mmin) / (1024 * 1024);        // 1 millionth of the span.
-            for (int i = 0; i < vs.Length-1; i++)
+            double epsilon = (mmax - mmin) / (1024 * 1024);        // 1 millionth of the span.
+            for (int i = 0; i < vs.Length - 1; i++)
             {
                 if (xsl[i + 1] - xsl[i] > epsilon) xsd.Add(xsl[i + 1]);
                 if (ysl[i + 1] - ysl[i] > epsilon) ysd.Add(ysl[i + 1]);
@@ -684,8 +684,8 @@ namespace Evryway
             xs = xsd.ToArray();
             ys = ysd.ToArray();
 
-            //Debug.Log("Xs :"); for (int i = 0; i < xs.Length; i++) Debug.Log($"\t{i}\t{xs[i]}");
-            //Debug.Log("Ys :"); for (int i = 0; i < ys.Length; i++) Debug.Log($"\t{i}\t{ys[i]}");
+            //Console.WriteLine("Xs :"); for (int i = 0; i < xs.Length; i++) Console.WriteLine($"\t{i}\t{xs[i]}");
+            //Console.WriteLine("Ys :"); for (int i = 0; i < ys.Length; i++) Console.WriteLine($"\t{i}\t{ys[i]}");
 
             // if we want to, here we can extend xs / ys, by adding additional points (midpoints, or reproject
             // as per the paper)
@@ -698,7 +698,7 @@ namespace Evryway
 
             // 1D arrays perform faster than 2D arrays - if performance is critical, use a 1D array
             // and index into it, e.g. (y*xc) + x;
-            cells = new int[xc,yc];
+            cells = new int[xc, yc];
 
             // now, iterate the polygon edges. find the x span (and their associated indices in xs) and
             // the y span (and their associated indices in ys)
@@ -706,8 +706,8 @@ namespace Evryway
             var v0 = vs[0];
             var six = -1;
             var siy = -1;
-            var eix = 0; while (xs[eix] < v0.x && eix < xs.Length-1) eix++;
-            var eiy = 0; while (ys[eiy] < v0.y && eiy < ys.Length-1)  eiy++;
+            var eix = 0; while (xs[eix] < v0.X && eix < xs.Length - 1) eix++;
+            var eiy = 0; while (ys[eiy] < v0.Y && eiy < ys.Length - 1) eiy++;
 
             for (int i = 0; i < vc; i++)
             {
@@ -727,19 +727,19 @@ namespace Evryway
                 // depending on edge length, etc - no guarantees!
                 // could possibly binary search, but if the edge lengths are short, a linear scan should be
                 // fairly fast anyway.
-                int tx = edge.x >= 0 ? 1 : - 1;             // -1 or 1
-                int ty = edge.y >= 0 ? 1 : - 1;             // -1 or 1
-                if (tx > 0) { while (xs[eix] < e.x && eix < xs.Length-1) eix++; } else { while (xs[eix] > e.x && eix > 0) eix -= 1; }
-                if (ty > 0) { while (ys[eiy] < e.y && eiy < ys.Length-1) eiy++; } else { while (ys[eiy] > e.y && eiy > 0) eiy -= 1; }
+                int tx = edge.X >= 0 ? 1 : -1;             // -1 or 1
+                int ty = edge.Y >= 0 ? 1 : -1;             // -1 or 1
+                if (tx > 0) { while (xs[eix] < e.X && eix < xs.Length - 1) eix++; } else { while (xs[eix] > e.X && eix > 0) eix -= 1; }
+                if (ty > 0) { while (ys[eiy] < e.Y && eiy < ys.Length - 1) eiy++; } else { while (ys[eiy] > e.Y && eiy > 0) eiy -= 1; }
 
                 // we now have a span.
-                var span_x_start = Mathf.Min(six, eix);
-                var span_y_start = Mathf.Min(siy, eiy);
+                var span_x_start = Math.Min(six, eix);
+                var span_y_start = Math.Min(siy, eiy);
 
-                var span_x_end = Mathf.Max(six, eix);
-                var span_y_end = Mathf.Max(siy, eiy);
+                var span_x_end = Math.Max(six, eix);
+                var span_y_end = Math.Max(siy, eiy);
 
-                //Debug.Log($"edge {i} : from ({s.x}, {s.y}) to ({e.x} {e.y}) - span x: {span_x_start}-{span_x_end}, y: {span_y_start}-{span_y_end}");
+                //Console.WriteLine($"edge {i} : from ({s.x}, {s.y}) to ({e.x} {e.y}) - span x: {span_x_start}-{span_x_end}, y: {span_y_start}-{span_y_end}");
 
                 // we care about the edge direction (and hence, the normal direction).
 
@@ -750,9 +750,9 @@ namespace Evryway
                 // given the winding order of the polygon is COUNTERCLOCKWISE, the "interior" side of the edge
                 // is a 90 degree CCW rotation. (orthogonal to the edge, facing into the polygon)
                 // I'm calling this "into" - note, this is NOT normalized! (we are only ever doing dot sign checks)
-                var into = new Vector2(-edge.y, edge.x);
-                int rx = into.x >= 0 ? 0 : 1;   
-                int ry = into.y >= 0 ? 0 : 1;
+                var into = new Vector3(-edge.Y, edge.X);
+                int rx = into.X >= 0 ? 0 : 1;
+                int ry = into.Y >= 0 ? 0 : 1;
 
                 // for -x,-y edges, the into direction is +X, -Y - use the TL cell vertex to test. (0,1)
                 // for +x,-y edges, the into direction is +X, +Y - use the BL cell vertex to test. (0,0)
@@ -771,18 +771,18 @@ namespace Evryway
                     for (int q = span_y_start; q < span_y_end; q++)
                     {
                         if (cells[p, q] < 0) continue;
-                        cells[p,q] = 1;
+                        cells[p, q] = 1;
                     }
                     continue;
                 }
                 else if (span_y_end - span_y_start == 0)
                 {
-                     // horizontal edge. pick the cells on the interior side.
+                    // horizontal edge. pick the cells on the interior side.
                     var q = span_y_start - ry;
                     for (int p = span_x_start; p < span_x_end; p++)
                     {
                         if (cells[p, q] < 0) continue;
-                        cells[p,q] = 1;
+                        cells[p, q] = 1;
                     }
                     continue;
                 }
@@ -795,12 +795,12 @@ namespace Evryway
                         // to this one, so continue the check in that case.
                         if (cells[p, q] < 0) continue;
                         // based on the edge direction, pick the correct corner to test against.
-                        var v = new Vector2(xs[p + rx], ys[q + ry]);
+                        var v = new Vector3(xs[p + rx], ys[q + ry]);
                         var sv = v - s;
-                        var d = Vector2.Dot(sv, into);
+                        var d = sv.Dot(into);
 
                         // mark the cell either exterior (-1) or interior (1)
-                        cells[p,q] = d < 0 ? -1 : 1;
+                        cells[p, q] = d < 0 ? -1 : 1;
                     }
                 }
             }
@@ -814,16 +814,16 @@ namespace Evryway
             for (int q = 0; q < yc; q++)
             {
                 // from the left edge.
-                for (int x = 0; x < xc; x++ )
+                for (int x = 0; x < xc; x++)
                 {
-                    if (cells[x,q] != 0) break;
-                    cells[x,q] = -1;
+                    if (cells[x, q] != 0) break;
+                    cells[x, q] = -1;
                 }
                 // from the right edge.
-                for (int x = xc-1; x >= 0; x--)
+                for (int x = xc - 1; x >= 0; x--)
                 {
-                    if (cells[x,q] != 0) break;
-                    cells[x,q] = -1;
+                    if (cells[x, q] != 0) break;
+                    cells[x, q] = -1;
                 }
             }
 
@@ -832,14 +832,14 @@ namespace Evryway
                 // from the bottom edge.
                 for (int y = 0; y < yc; y++)
                 {
-                    if (cells[p,y] != 0) break;
-                    cells[p,y] = -1;
+                    if (cells[p, y] != 0) break;
+                    cells[p, y] = -1;
                 }
                 // from the top edge.
-                for (int y = yc-1; y >= 0; y--)
+                for (int y = yc - 1; y >= 0; y--)
                 {
-                    if (cells[p,y] != 0) break;
-                    cells[p,y] = -1;
+                    if (cells[p, y] != 0) break;
+                    cells[p, y] = -1;
                 }
             }
 
@@ -853,7 +853,7 @@ namespace Evryway
                     // anything that was -1 goes to 0.
                     // anything that was 0 or 1 goes to 1.
                     // this ensures any un-tested cells are classed as interior.
-                    cells[i,j] = cells[i,j] < 0 ? 0 : 1;
+                    cells[i, j] = cells[i, j] < 0 ? 0 : 1;
                 }
             }
 
@@ -866,17 +866,17 @@ namespace Evryway
 
         static List<int> clir_hvec = new List<int>();
         static List<int> clir_vvec = new List<int>();
-        static List<int2> clir_spans = new List<int2>();
+        static List<Int2> clir_spans = new List<Int2>();
 
-        public static bool CalculateLargestInteriorRectangleUsingSpans(float[] xs, float[] ys, int[,] cells, out Bound2D best)
+        public static bool CalculateLargestInteriorRectangleUsingSpans(double[] xs, double[] ys, int[,] cells, out Bound2D best)
         {
             // cell lengths. interiors[x,y] should match [axc,ayc];
-            int axc = xs.Length-1;
-            int ayc = ys.Length-1;
+            int axc = xs.Length - 1;
+            int ayc = ys.Length - 1;
 
-            float best_area = 0.0f;
-            int2 best_origin = new int2(-1, -1);
-            int2 best_span = new int2(-1, -1);
+            double best_area = 0.0f;
+            Int2 best_origin = new Int2(-1, -1);
+            Int2 best_span = new Int2(-1, -1);
 
 
             var adjacency_horizontal = new int[axc, ayc];
@@ -886,9 +886,9 @@ namespace Evryway
             for (int y = 0; y < ayc; y++)
             {
                 int span = 0;
-                for (int x = axc-1; x >= 0; x--)
+                for (int x = axc - 1; x >= 0; x--)
                 {
-                    if (cells[x,y] > 0) span++; else span = 0;
+                    if (cells[x, y] > 0) span++; else span = 0;
                     adjacency_horizontal[x, y] = span;
                 }
             }
@@ -897,9 +897,9 @@ namespace Evryway
             for (int x = 0; x < axc; x++)
             {
                 int span = 0;
-                for (int y = ayc-1; y >= 0; y--)
+                for (int y = ayc - 1; y >= 0; y--)
                 {
-                    if (cells[x,y] > 0) span++; else span = 0;
+                    if (cells[x, y] > 0) span++; else span = 0;
                     adjacency_vertical[x, y] = span;
                 }
             }
@@ -919,12 +919,12 @@ namespace Evryway
 
                     var h = adjacency_horizontal[x, y];
                     clir_hvec.Add(h);
-                    for (int q = y+1; q < ayc; q++)
+                    for (int q = y + 1; q < ayc; q++)
                     {
                         if (cells[x, q] != 1) break;
                         // each row can only be as large as the previous - a rectangle cannot push
                         // further out than a lower row.
-                        h = Mathf.Min(adjacency_horizontal[x, q], h);
+                        h = Math.Min(adjacency_horizontal[x, q], h);
                         clir_hvec.Add(h);
                     }
 
@@ -935,12 +935,12 @@ namespace Evryway
 
                     var v = adjacency_vertical[x, y];
                     clir_vvec.Add(v);
-                    for (int p = x+1; p < axc; p++)
+                    for (int p = x + 1; p < axc; p++)
                     {
                         if (cells[p, y] != 1) break;
                         // each column can only be as large as the previous - a rectangle cannot push
                         // further up than a previous column.
-                        v = Mathf.Min(adjacency_vertical[p, y], v);
+                        v = Math.Min(adjacency_vertical[p, y], v);
                         clir_vvec.Add(v);
                     }
 
@@ -948,17 +948,17 @@ namespace Evryway
                     // log the vectors.
                     // var hstr = string.Join(", ", hvec.Select(h => h.ToString()));
                     // var vstr = string.Join(", ", vvec.Select(h => h.ToString()));
-                    // Debug.Log($"node ({x}, {y}) : H = ({hstr}), V = ({vstr})");
+                    // Console.WriteLine($"node ({x}, {y}) : H = ({hstr}), V = ({vstr})");
 
                     clir_spans.Clear();
 
                     // generate the set of valid spans.
-                    int2 span_last = new int2(-1, -1);
+                    Int2 span_last = new Int2(-1, -1);
                     for (int i = 0; i < clir_hvec.Count; i++)
                     {
                         int p = clir_hvec[i];
-                        int q = clir_vvec[p-1];
-                        int2 span = new int2(p, q);
+                        int q = clir_vvec[p - 1];
+                        Int2 span = new Int2(p, q);
                         if (span.x != span_last.x && span.y != span_last.y)
                         {
                             clir_spans.Add(span);
@@ -967,8 +967,8 @@ namespace Evryway
                     }
 
 
-                    //Debug.Log($"SPANS FOR {x},{y} : {clir_spans.Count}");
-                    //for (int i = 0; i < clir_spans.Count; i++)  Debug.Log($"\t{clir_spans[i]}");
+                    //Console.WriteLine($"SPANS FOR {x},{y} : {clir_spans.Count}");
+                    //for (int i = 0; i < clir_spans.Count; i++)  Console.WriteLine($"\t{clir_spans[i]}");
 
                     // for each span, calculate the area.
 
@@ -986,7 +986,7 @@ namespace Evryway
                         {
                             best_area = area;
                             best_span = span;
-                            best_origin = new int2(x, y);
+                            best_origin = new Int2(x, y);
                         }
                     }
                 }
@@ -994,24 +994,24 @@ namespace Evryway
 
             if (best_area > 0)
             {
-                //Debug.Log($"best area : {best_area} {best_origin} {best_span}");
+                //Console.WriteLine($"best area : {best_area} {best_origin} {best_span}");
 
                 var xstart = xs[best_origin.x];
                 var xend = xs[best_origin.x + best_span.x];
                 var ystart = ys[best_origin.y];
                 var yend = ys[best_origin.y + best_span.y];
 
-                Vector2 centre = new Vector2((xend + xstart) * 0.5f, (yend + ystart) * 0.5f);
-                Vector2 size = new Vector2((xend-xstart), (yend-ystart));
+                Vector3 centre = new Vector3((xend + xstart) * 0.5f, (yend + ystart) * 0.5f);
+                Vector3 size = new Vector3((xend - xstart), (yend - ystart));
 
-                //Debug.Log($"X : {xstart} {xend}, Y : {ystart} {yend}");
-                Debug.Log($"Area : {best_area} Centre: {centre.F3()} size : {size.F3()}");
+                //Console.WriteLine($"X : {xstart} {xend}, Y : {ystart} {yend}");
+                Console.WriteLine($"Area : {best_area} Centre: {centre.F3()} size : {size.F3()}");
 
-                best = new Bound2D(centre, Vector2.right, size);
+                best = new Bound2D(centre, Vector3.XAxis, size);
                 return true;
             }
 
-            best = new Bound2D(Vector2.zero, Vector2.right, Vector2.zero);
+            best = new Bound2D(new Vector3(0, 0, 0), Vector3.XAxis, new Vector3(0, 0, 0));
             return false;
         }
 
@@ -1021,40 +1021,40 @@ namespace Evryway
 
 
 
-        public static bool CalculateLargestInteriorRectangle(float[] xs, float[] ys, int[,] cells, out Bound2D best)
+        public static bool CalculateLargestInteriorRectangle(double[] xs, double[] ys, int[,] cells, out Bound2D best)
         {
             // cell lengths. interiors[x,y] should match [axc,ayc];
             int axc = xs.Length - 1;
             int ayc = ys.Length - 1;
 
-            float best_area = 0.0f;
-            Vector2 best_origin = Vector2.one * -1;
-            Vector2 best_span = Vector2.one * -1;
+            double best_area = 0.0f;
+            Vector3 best_origin = new Vector3(1, 1, 1) * -1;
+            Vector3 best_span = new Vector3(1, 1, 1) * -1;
 
-            List<float> hspans = new List<float>();
-            List<float> vspans = new List<float>();
+            List<double> hspans = new List<double>();
+            List<double> vspans = new List<double>();
 
-            var lengths_horizontal = new float[axc,ayc];
-            var lengths_vertical = new float[axc,ayc];
+            var lengths_horizontal = new double[axc, ayc];
+            var lengths_vertical = new double[axc, ayc];
 
 
             for (int y = 0; y < ayc; y++)
             {
-                float span = 0;
+                double span = 0;
                 for (int x = axc - 1; x >= 0; x--)
                 {
                     span = (cells[x, y] <= 0) ? 0 : span + xs[x + 1] - xs[x];
-                    lengths_horizontal[x,y] = span;
+                    lengths_horizontal[x, y] = span;
                 }
             }
 
             for (int x = 0; x < axc; x++)
             {
-                float span = 0;
+                double span = 0;
                 for (int y = ayc - 1; y >= 0; y--)
                 {
                     span = (cells[x, y] <= 0) ? 0 : span + ys[y + 1] - ys[y];
-                    lengths_vertical[x,y] = span;
+                    lengths_vertical[x, y] = span;
                 }
             }
 
@@ -1090,11 +1090,11 @@ namespace Evryway
             {
                 for (int x = 0; x < axc; x++)
                 {
-                    var iv = cells[x,y];
+                    var iv = cells[x, y];
                     if (iv == 0) continue;
 
-                    var h = lengths_horizontal[x,y];
-                    var v = lengths_vertical[x,y];
+                    var h = lengths_horizontal[x, y];
+                    var v = lengths_vertical[x, y];
 
                     // if the best POSSIBLE area (which may not be valid!)
                     // is smaller than the best area, then we don't need to run any further tests.
@@ -1106,10 +1106,10 @@ namespace Evryway
                     // step up from our initial cell, and look right.
 
                     hspans.Add(h);
-                    for (int q = y+1; q < ayc; q++)
+                    for (int q = y + 1; q < ayc; q++)
                     {
-                        if (cells[x,q] == 0) break;
-                        var h2 = lengths_horizontal[x,q];
+                        if (cells[x, q] == 0) break;
+                        var h2 = lengths_horizontal[x, q];
                         if (h2 >= h) continue;
                         h = h2;
                         hspans.Add(h);
@@ -1121,14 +1121,14 @@ namespace Evryway
                     // step right from our initial cell, and look up.
 
                     vspans.Add(v);
-                    for (int p = x+1; p < axc; p++)
+                    for (int p = x + 1; p < axc; p++)
                     {
-                        if (cells[p,y] == 0) break;
-                        var v2 = lengths_vertical[p,y];
+                        if (cells[p, y] == 0) break;
+                        var v2 = lengths_vertical[p, y];
                         if (v2 >= v) continue;
                         v = v2;
 
-                        vspans.Add(v);            
+                        vspans.Add(v);
                     }
 
 
@@ -1136,11 +1136,11 @@ namespace Evryway
                     // log the vectors.
                     //var hstr = string.Join(", ", hspans.Select(ht => ht.ToString()));
                     //var vstr = string.Join(", ", vspans.Select(vt => vt.ToString()));
-                    //Debug.Log($"node ({x}, {y}) : H = ({hstr}), V = ({vstr})");
+                    //Console.WriteLine($"node ({x}, {y}) : H = ({hstr}), V = ({vstr})");
 
                     if (vspans.Count != hspans.Count)
                     {
-                        Debug.LogError($"span counts don't match.  {hspans.Count} {vspans.Count}");
+                        Console.WriteLine($"span counts don't match.  {hspans.Count} {vspans.Count}");
 
                         /*
 
@@ -1160,7 +1160,7 @@ namespace Evryway
                             if (cells[x, q] != 1) break;
                             // each row can only be as large as the previous - a rectangle cannot push
                             // further out than a lower row.
-                            sh = Mathf.Min(adjacency_horizontal[x, q], sh);
+                            sh = Math.Min(adjacency_horizontal[x, q], sh);
                             clir_hvec.Add(sh);
                         }
 
@@ -1176,19 +1176,19 @@ namespace Evryway
                             if (cells[p, y] != 1) break;
                             // each column can only be as large as the previous - a rectangle cannot push
                             // further up than a previous column.
-                            sv = Mathf.Min(adjacency_vertical[p, y], sv);
+                            sv = Math.Min(adjacency_vertical[p, y], sv);
                             clir_vvec.Add(sv);
                         }
 
                         clir_spans.Clear();
 
                         // generate the set of valid spans.
-                        int2 span_last = new int2(-1, -1);
+                        Int2 span_last = new Int2(-1, -1);
                         for (int i = 0; i < clir_hvec.Count; i++)
                         {
                             int p = clir_hvec[i];
                             int q = clir_vvec[p - 1];
-                            int2 span = new int2(p, q);
+                            Int2 span = new Int2(p, q);
                             if (span.x != span_last.x && span.y != span_last.y)
                             {
                                 clir_spans.Add(span);
@@ -1219,14 +1219,14 @@ namespace Evryway
 
                     for (int i = 0; i < hspans.Count; i++)
                     {
-                        float hl = hspans[i];
-                        float vl = vspans[i];
-                        float area = hl * vl;
+                        double hl = hspans[i];
+                        double vl = vspans[i];
+                        double area = hl * vl;
                         if (area > best_area)
                         {
                             best_area = area;
-                            best_origin = new Vector2(xs[x], ys[y]);
-                            best_span = new Vector2(hl, vl);
+                            best_origin = new Vector3(xs[x], ys[y]);
+                            best_span = new Vector3(hl, vl);
                         }
                     }
 
@@ -1235,17 +1235,17 @@ namespace Evryway
 
             if (best_area > 0)
             {
-                Vector2 centre = best_origin + (best_span * 0.5f);
-                Vector2 size = best_span;
-                Debug.Log($"best area : {best_area} {centre.F3()} {size.F3()}");
+                Vector3 centre = best_origin + (best_span * 0.5f);
+                Vector3 size = best_span;
+                Console.WriteLine($"best area : {best_area} {centre.F3()} {size.F3()}");
 
-                //Debug.Log($"X : {xstart} {xend}, Y : {ystart} {yend}");
-                //Debug.Log($"Centre: {centre.F3()} size : {size.F3()}");
-                best = new Bound2D(centre, Vector2.right, size);
+                //Console.WriteLine($"X : {xstart} {xend}, Y : {ystart} {yend}");
+                //Console.WriteLine($"Centre: {centre.F3()} size : {size.F3()}");
+                best = new Bound2D(centre, Vector3.XAxis, size);
                 return true;
             }
 
-            best = new Bound2D(Vector2.zero, Vector2.right, Vector2.zero);
+            best = new Bound2D(new Vector3(0, 0, 0), Vector3.XAxis, new Vector3(0, 0, 0));
             return false;
         }
 
@@ -1255,9 +1255,9 @@ namespace Evryway
         // coverage of angle options earlier, so quick reject gets more opportunity
         // to work.
 
-        public static bool CalculateLargestInteriorRectangleWithAngleSweep(Vector2[] vs_src, float angle_step, out Bound2D best, out float best_angle)
+        public static bool CalculateLargestInteriorRectangleWithAngleSweep(Vector3[] vs_src, double angle_step, out Bound2D best, out double best_angle)
         {
-            best = new Bound2D(Vector2.zero, Vector2.right, Vector2.zero);
+            best = new Bound2D(new Vector3(0, 0, 0), Vector3.XAxis, new Vector3(0, 0, 0));
             best_angle = 0;
 
             int vc = vs_src.Length;
@@ -1265,36 +1265,36 @@ namespace Evryway
             {
                 return false;
             }
-            Vector2[] vs = new Vector2[vc];
+            Vector3[] vs = new Vector3[vc];
 
-            float[] xs = new float[vc];
-            float[] ys = new float[vc];
+            double[] xs = new double[vc];
+            double[] ys = new double[vc];
 
-            float[] xds = new float[vc];
-            float[] yds = new float[vc];
+            double[] xds = new double[vc];
+            double[] yds = new double[vc];
 
-            List<float> xsl = new List<float>(vc);
-            List<float> ysl = new List<float>(vc);
+            List<double> xsl = new List<double>(vc);
+            List<double> ysl = new List<double>(vc);
 
-            float[] hspans = new float[vc];
-            float[] vspans = new float[vc];
+            double[] hspans = new double[vc];
+            double[] vspans = new double[vc];
 
-            var lengths_horizontal = new float[vc, vc];
-            var lengths_vertical = new float[vc, vc];
+            var lengths_horizontal = new double[vc, vc];
+            var lengths_vertical = new double[vc, vc];
 
             var cells = new int[vc, vc];
 
-            float best_area = 0;
+            double best_area = 0;
             best_angle = 0;
-            Vector2 best_origin = Vector2.one * -1;
-            Vector2 best_span = Vector2.one * -1;
+            Vector3 best_origin = new Vector3(1, 1, 1) * -1;
+            Vector3 best_span = new Vector3(1, 1, 1) * -1;
 
-            float ang_min = -45;
-            float ang_max = 45;
-            float ang_range = ang_max - ang_min;
+            double ang_min = -45;
+            double ang_max = 45;
+            double ang_range = ang_max - ang_min;
 
-            List<float> steps_lin = new List<float>();
-            for (float f = ang_min; f < ang_max; f += angle_step) steps_lin.Add(f);
+            List<double> steps_lin = new List<double>();
+            for (double f = ang_min; f < ang_max; f += angle_step) steps_lin.Add(f);
 
             var steps = steps_lin;
 
@@ -1318,23 +1318,23 @@ namespace Evryway
                 {
                     steps_at_layer.Add(pull);
                     steps_left -= pull;
-                    pull = Mathf.Min(steps_left, pull << 1);
+                    pull = Math.Min(steps_left, pull << 1);
                 }
 
 
-                List<float> steps_fan = new List<float>();
+                List<double> steps_fan = new List<double>();
                 foreach (var lay in steps_at_layer)
                 {
                     // pull out lay items from steps_lin.
-                    float range_per_item = ang_range / (float)lay;
-                    float mid_per_item = range_per_item * 0.5f;
-                    float next = ang_min;
+                    double range_per_item = ang_range / (double)lay;
+                    double mid_per_item = range_per_item * 0.5f;
+                    double next = ang_min;
                     for (int i = 0; i < lay; i++)
                     {
-                        float check = next + mid_per_item;
+                        double check = next + mid_per_item;
 
                         int idx = steps_lin.BinarySearch(check);
-                        if (idx < 0) idx = Mathf.Clamp((~idx) + 1, 0, steps_lin.Count - 1);
+                        if (idx < 0) idx = Clamp((~idx) + 1, 0, steps_lin.Count - 1);
                         var val = steps_lin[idx];
                         steps_fan.Add(val);
                         steps_lin.RemoveAt(idx);
@@ -1348,9 +1348,9 @@ namespace Evryway
             // work out the number of layers, where we have 1 right at the top.
 
             foreach (var angle in steps)
-            //float angle = 0f;
+            //double angle = 0f;
             {
-                //Debug.Log(angle);
+                //Console.WriteLine(angle);
 
                 xsl.Clear();
                 ysl.Clear();
@@ -1359,20 +1359,20 @@ namespace Evryway
                 {
                     var v = vs_src[i].Rotate(angle);
                     vs[i] = v;
-                    xsl.Add(v.x);
-                    ysl.Add(v.y);
+                    xsl.Add(v.X);
+                    ysl.Add(v.Y);
                 }
 
                 xsl.Sort();
                 ysl.Sort();
 
-                float xmin = xsl[0];
-                float xmax = xsl[xsl.Count - 1];
-                float ymin = ysl[0];
-                float ymax = ysl[ysl.Count - 1];
-                float mmin = Mathf.Min(xmin, ymin);
-                float mmax = Mathf.Max(xmax, ymax);
-                float epsilon = (mmax - mmin) / (1024 * 1024);        // 1 millionth of the span.
+                double xmin = xsl[0];
+                double xmax = xsl[xsl.Count - 1];
+                double ymin = ysl[0];
+                double ymax = ysl[ysl.Count - 1];
+                double mmin = Math.Min(xmin, ymin);
+                double mmax = Math.Max(xmax, ymax);
+                double epsilon = (mmax - mmin) / (1024 * 1024);        // 1 millionth of the span.
 
                 var xc = 1;
                 var yc = 1;
@@ -1396,11 +1396,11 @@ namespace Evryway
 
                 var v0 = vs[0];
 
-                var eix = 0; while (xs[eix] < v0.x && eix < xc) eix++;
-                var eiy = 0; while (ys[eiy] < v0.y && eiy < yc) eiy++;
+                var eix = 0; while (xs[eix] < v0.X && eix < xc) eix++;
+                var eiy = 0; while (ys[eiy] < v0.Y && eiy < yc) eiy++;
                 // in this case, it may be slightly faster - but not worth the algo complexity.
-                //var eix = System.Array.BinarySearch(xs, v0.x); if (eix < 0) eix = Mathf.Clamp(0,xc+1,(~eix) - 1);
-                //var eiy = System.Array.BinarySearch(ys, v0.y); if (eix < 0) eiy = Mathf.Clamp(0,yc+1,(~eiy) - 1);
+                //var eix = System.Array.BinarySearch(xs, v0.x); if (eix < 0) eix = Math.Clamp(0,xc+1,(~eix) - 1);
+                //var eiy = System.Array.BinarySearch(ys, v0.y); if (eix < 0) eiy = Math.Clamp(0,yc+1,(~eiy) - 1);
 
 
                 for (int i = 0; i < vc; i++)
@@ -1409,34 +1409,34 @@ namespace Evryway
                     var e = vs[(i + 1) % vc];
                     var edge = e - s;
 
-                    var into = new Vector2(-edge.y, edge.x);
-                    int rx = into.x >= 0 ? 0 : 1;
-                    int ry = into.y >= 0 ? 0 : 1;
+                    var into = new Vector3(-edge.Y, edge.X);
+                    int rx = into.X >= 0 ? 0 : 1;
+                    int ry = into.Y >= 0 ? 0 : 1;
 
                     var six = eix;
                     var siy = eiy;
 
 
-                    int tx = edge.x >= 0 ? 1 : -1;             // -1 or 1
-                    int ty = edge.y >= 0 ? 1 : -1;             // -1 or 1
+                    int tx = edge.X >= 0 ? 1 : -1;             // -1 or 1
+                    int ty = edge.Y >= 0 ? 1 : -1;             // -1 or 1
 
-                    if (tx > 0) { while (xs[eix] < e.x && eix <= xc) eix++; } else { while (xs[eix] > e.x && eix > 0) eix--; }
-                    if (ty > 0) { while (ys[eiy] < e.y && eiy <= yc) eiy++; } else { while (ys[eiy] > e.y && eiy > 0) eiy--; }
+                    if (tx > 0) { while (xs[eix] < e.X && eix <= xc) eix++; } else { while (xs[eix] > e.X && eix > 0) eix--; }
+                    if (ty > 0) { while (ys[eiy] < e.Y && eiy <= yc) eiy++; } else { while (ys[eiy] > e.Y && eiy > 0) eiy--; }
 
                     // tried it. timed it. much slower. probably because of locality in the whiles, above.
                     //int wx = edge.x >= 0 ? 0 : 1;
                     //int wy = edge.y >= 0 ? 0 : 1;
-                    //var eixb = System.Array.BinarySearch(xs, e.x); if (eixb < 0) { eixb = Mathf.Clamp((~eixb) - wx, 0, xc + 1); }
-                    //var eiyb = System.Array.BinarySearch(ys, e.y); if (eiyb < 0) { eiyb = Mathf.Clamp((~eiyb) - wy, 0, yc + 1); }
+                    //var eixb = System.Array.BinarySearch(xs, e.x); if (eixb < 0) { eixb = Math.Clamp((~eixb) - wx, 0, xc + 1); }
+                    //var eiyb = System.Array.BinarySearch(ys, e.y); if (eiyb < 0) { eiyb = Math.Clamp((~eiyb) - wy, 0, yc + 1); }
 
 
 
                     // we now have a span.
-                    var span_x_start = Mathf.Min(six, eix);
-                    var span_y_start = Mathf.Min(siy, eiy);
+                    var span_x_start = Math.Min(six, eix);
+                    var span_y_start = Math.Min(siy, eiy);
 
-                    var span_x_end = Mathf.Max(six, eix);
-                    var span_y_end = Mathf.Max(siy, eiy);
+                    var span_x_end = Math.Max(six, eix);
+                    var span_y_end = Math.Max(siy, eiy);
 
 
 
@@ -1465,9 +1465,9 @@ namespace Evryway
                         for (int p = span_x_start; p < span_x_end; p++)
                         {
                             if (cells[p, q] < 0) continue;
-                            var v = new Vector2(xs[p + rx], ys[q + ry]);
+                            var v = new Vector3(xs[p + rx], ys[q + ry]);
                             var sv = v - s;
-                            var d = Vector2.Dot(sv, into);
+                            var d = sv.Dot(into);
                             cells[p, q] = d < 0 ? -1 : 1;
                         }
                     }
@@ -1522,7 +1522,7 @@ namespace Evryway
 
                 for (int y = 0; y < yc; y++)
                 {
-                    float span = 0;
+                    double span = 0;
                     for (int x = xc - 1; x >= 0; x--)
                     {
                         span = (cells[x, y] <= 0) ? 0 : span + xds[x];
@@ -1532,7 +1532,7 @@ namespace Evryway
 
                 for (int x = 0; x < xc; x++)
                 {
-                    float span = 0;
+                    double span = 0;
                     for (int y = yc - 1; y >= 0; y--)
                     {
                         span = (cells[x, y] <= 0) ? 0 : span + yds[y];
@@ -1576,20 +1576,20 @@ namespace Evryway
 
                         if (hsc != vsc)
                         {
-                            Debug.LogError($"span counts don't match.  {hsc} {vsc}");
+                            Console.WriteLine($"span counts don't match.  {hsc} {vsc}");
                             continue;
                         }
 
                         for (int i = 0; i < hsc; i++)
                         {
-                            float hl = hspans[i];
-                            float vl = vspans[hsc - (i + 1)];
-                            float area = hl * vl;
+                            double hl = hspans[i];
+                            double vl = vspans[hsc - (i + 1)];
+                            double area = hl * vl;
                             if (area > best_area)
                             {
                                 best_area = area;
-                                best_origin = new Vector2(xs[x], ys[y]);
-                                best_span = new Vector2(hl, vl);
+                                best_origin = new Vector3(xs[x], ys[y]);
+                                best_span = new Vector3(hl, vl);
                                 best_angle = angle;
                             }
                         }
@@ -1607,16 +1607,29 @@ namespace Evryway
             var bo_r = best_origin.Rotate(-best_angle);
             var bs_r = best_span.Rotate(-best_angle);
 
-            Vector2 centre = bo_r + (bs_r * 0.5f);
-            Vector2 size = best_span;
-            Vector2 axis = Vector2.right.Rotate(-best_angle);
+            Vector3 centre = bo_r + (bs_r * 0.5f);
+            Vector3 size = best_span;
+            Vector3 axis = Vector3.XAxis.Rotate(-best_angle);
 
             best = new Bound2D(centre, axis, size);
 
             return true;
         }
+
+        private static double Clamp(double value, double min, double max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+
+        private static int Clamp(int value, int min, int max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
     }
 
 
-}
 }

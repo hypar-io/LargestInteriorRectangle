@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using Elements.Geometry;
 
 // 2D bounds.
 // NOT XY axis aligned.
@@ -10,43 +10,43 @@ namespace Evryway
 
     public class Bound2D
     {
-        public Vector2 centre { get; private set; }
-        public Vector2 axis_a { get; private set; }     // first axis (unit length)
-        public Vector2 axis_b { get; private set; }     // second axis (unit length)
-        public float length_a { get; private set; }     // first axis length
-        public float length_b { get; private set; }     // second axis length (may be larger)
-        public Vector2 size { get; private set; }       // (length_a,length_b)
-        public Vector2 extents { get => size * 0.5f; }    // half-length, e.g. from centre.
+        public Vector3 centre { get; private set; }
+        public Vector3 axis_a { get; private set; }     // first axis (unit length)
+        public Vector3 axis_b { get; private set; }     // second axis (unit length)
+        public double length_a { get; private set; }     // first axis length
+        public double length_b { get; private set; }     // second axis length (may be larger)
+        public Vector3 size { get; private set; }       // (length_a,length_b)
+        public Vector3 extents { get => size * 0.5f; }    // half-length, e.g. from centre.
 
-        public Vector2[] corners { get; private set; }  // four corners. in order: BL, BR, TR, TL (assuming axis a is X axis and axis b is Y axis)
-                                                        // (- axis_a * extents.x - axis_b * extents.y), 
+        public Vector3[] corners { get; private set; }  // four corners. in order: BL, BR, TR, TL (assuming axis a is X axis and axis b is Y axis)
+                                                        // (- axis_a * extents.X - axis_b * extents.y), 
                                                         // (+ axis_a * extents.x - axis_b * extents.y), 
                                                         // (+ axis_a * extents.x + axis_b * extents.y), 
                                                         // (- axis_a * extents.x + axis_b * extents.y), 
-        public float area { get; private set; }
+        public double area { get; private set; }
         public bool major_axis_is_a { get => length_a >= length_b; }
-        public float angle { get; private set; }
+        public double angle { get; private set; }
 
-        public Vector2 bl { get => corners[0]; }
-        public Vector2 br { get => corners[1]; }
-        public Vector2 tr { get => corners[2]; }
-        public Vector2 tl { get => corners[3]; }
+        public Vector3 bl { get => corners[0]; }
+        public Vector3 br { get => corners[1]; }
+        public Vector3 tr { get => corners[2]; }
+        public Vector3 tl { get => corners[3]; }
 
-        public Bound2D(Vector2 centre, Vector2 axis, Vector2 size)
+        public Bound2D(Vector3 centre, Vector3 axis, Vector3 size)
         {
             this.centre = centre;
-            this.axis_a = axis.normalized;
-            this.axis_b = new Vector2(-axis_a.y, axis_a.x);
+            this.axis_a = axis.Unitized();
+            this.axis_b = new Vector3(-axis_a.Y, axis_a.X);
             this.size = size;
-            this.length_a = size.x;
-            this.length_b = size.y;
+            this.length_a = size.X;
+            this.length_b = size.Y;
             Cache();
 
         }
 
         // make the bound aligned such that the major axis (longest length) is axis_a, and
         // axis_a.x is positive.
-        
+
         public void AlignMajor()
         {
             bool dirty = false;
@@ -55,18 +55,18 @@ namespace Evryway
                 // rotate the axes.
                 var axis_t = axis_a;
                 axis_a = axis_b;
-                axis_b = -axis_t;
+                axis_b = axis_t.Negate();
                 // swap lengths.
-                length_a = size.y;
-                length_b = size.x;
-                size = new Vector2(length_a, length_b);
+                length_a = size.Y;
+                length_b = size.X;
+                size = new Vector3(length_a, length_b);
                 dirty = true;
             }
 
-            if (axis_a.x <= 0)
+            if (axis_a.X <= 0)
             {
-                axis_a = -axis_a;
-                axis_b = -axis_b;
+                axis_a = axis_a.Negate();
+                axis_b = axis_b.Negate();
                 dirty = true;
             }
 
@@ -80,17 +80,17 @@ namespace Evryway
         void Cache()
         {
             area = length_a * length_b;
-            angle = Vector2.SignedAngle(Vector2.right, axis_a);
-            corners = new Vector2[]
+            angle = Vector3.XAxis.PlaneAngleTo(axis_a);
+            corners = new Vector3[]
             {
-                centre - (axis_a * extents.x) - (axis_b * extents.y),
-                centre + (axis_a * extents.x) - (axis_b * extents.y),
-                centre + (axis_a * extents.x) + (axis_b * extents.y),
-                centre - (axis_a * extents.x) + (axis_b * extents.y),
+                centre - (axis_a * extents.X) - (axis_b * extents.Y),
+                centre + (axis_a * extents.X) - (axis_b * extents.Y),
+                centre + (axis_a * extents.X) + (axis_b * extents.Y),
+                centre - (axis_a * extents.X) + (axis_b * extents.Y),
             };
         }
 
-        public string info { get => $"area: {area}, axes: ({axis_a.x}, {axis_a.y}) ; ({axis_b.x}, {axis_b.y}), size: ({length_a}, {length_b}) angle: {angle}"; }
+        public string info { get => $"area: {area}, axes: ({axis_a.X}, {axis_a.Y}) ; ({axis_b.X}, {axis_b.Y}), size: ({length_a}, {length_b}) angle: {angle}"; }
 
     }
 }
