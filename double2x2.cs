@@ -1,4 +1,4 @@
-namespace Evryway
+namespace Elements.LIR
 {
 
     public class Double2

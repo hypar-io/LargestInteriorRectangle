@@ -1,7 +1,7 @@
 ﻿using System;
 using Elements.Geometry;
 
-namespace Evryway
+namespace Elements.LIR
 {
 
     // utility functions, extending Vector3.

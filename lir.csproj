@@ -1,8 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Hypar.Elements" Version="1.0.2"/>
+    <PackageReference Include="Hypar.Elements" Version="1.0.2" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <Title>Hypar Elements: Largest Interior Rectangle</Title>
+    <PackageDescription>A collection of methods for calculating an Axis-Aligned interior rectangle from a polygon.</PackageDescription>
+    <PackageId>Elements.LargestInteriorRectangle</PackageId>
+    <PackageProjectUrl>https://github.com/hypar-io/LargestInteriorRectangle/</PackageProjectUrl>
+    <Version>$(Version)</Version>
+    <Authors>Andrew Heumann</Authors>
+    <Company>Hypar</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
 </Project>

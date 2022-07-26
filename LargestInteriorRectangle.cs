@@ -30,12 +30,13 @@ using Elements.Geometry;
 // https://journals.ut.ac.ir/article_71280_2a21de484e568a9e396458a5930ca06a.pdf (x)
 // https://www.evryway.com/interior-rectangle/
 
-namespace Evryway
+namespace Elements.LIR
 {
 
     public static class LargestInteriorRectangle
     {
 
+        // I think this is obviated by the transformation from vector2 => vector3
         public static Vector3[] Vector3XZToVector3(IEnumerable<Vector3> vec3s_xz)
         {
             var c = vec3s_xz.Count();
@@ -1247,6 +1248,13 @@ namespace Evryway
 
             best = new Bound2D(new Vector3(0, 0, 0), Vector3.XAxis, new Vector3(0, 0, 0));
             return false;
+        }
+
+
+        public static bool CalculateLargestInteriorRectangle(Polygon p, out Bound2D best)
+        {
+            CalculateInteriorCells(p.Vertices.ToArray<Vector3>(), out var xs, out var ys, out int[,] cells);
+            return CalculateLargestInteriorRectangle(xs, ys, cells, out best);
         }
 
         // this version does ONE lot of allocations, and tests across angles too.

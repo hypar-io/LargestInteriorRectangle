@@ -13,8 +13,10 @@ The Hypar.Elements NuGet package is required to use this library.
 
 ### Usage Example
 ```cs
-Vector3[] vs = new Vector3[]
-{
+using Elements.Geometry;
+using Elements.LIR;
+Polygon pgon = new Polygon
+(
     (9,-7),
     (12,-6),
     (8,3),
@@ -30,15 +32,11 @@ Vector3[] vs = new Vector3[]
     (-2,-7),
     (1,-3),
     (5,-7),
-    (8,-4),
-};
-
-LargestInteriorRectangle.CalculateInteriorCells(vs, out var xs, out var ys, out int[,] cells);
-LargestInteriorRectangle.CalculateLargestInteriorRectangle(xs, ys, cells, out var best);
-
-var pgon = new Polygon(vs);
+    (8,-4)
+);
+LargestInteriorRectangle.CalculateLargestInteriorRectangle(pgon, out var best);
+var rect = best.Polygon;
 var mc = new ModelCurve(pgon, BuiltInMaterials.XAxis);
-var rect = new Polygon(best.corners);
 var mc2 = new ModelCurve(rect, BuiltInMaterials.YAxis);
 
 var model = new Model();

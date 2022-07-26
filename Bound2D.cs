@@ -5,7 +5,7 @@ using Elements.Geometry;
 // 2D bounds.
 // NOT XY axis aligned.
 
-namespace Evryway
+namespace Elements.LIR
 {
 
     public class Bound2D
@@ -17,6 +17,8 @@ namespace Evryway
         public double length_b { get; private set; }     // second axis length (may be larger)
         public Vector3 size { get; private set; }       // (length_a,length_b)
         public Vector3 extents { get => size * 0.5f; }    // half-length, e.g. from centre.
+
+        public Polygon Polygon => new Polygon(corners);
 
         public Vector3[] corners { get; private set; }  // four corners. in order: BL, BR, TR, TL (assuming axis a is X axis and axis b is Y axis)
                                                         // (- axis_a * extents.X - axis_b * extents.y), 
