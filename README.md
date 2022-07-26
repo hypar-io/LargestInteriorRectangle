@@ -1,7 +1,7 @@
 # Largest Interior Rectangle — Hypar.Elements Version
 
 Largest Interior Rectangle implementation in C# for use with Hypar Elements.
-This code is taken nearly verbatim from [https://github.com/Evryway/lir](https://github.com/Evryway/lir) — The unity dependencies have been replaced with Hypar.Elements. Many many thanks to Evryway for his work, and for making it available via the MIT license! 
+This code is taken nearly verbatim from [https://github.com/Evryway/lir](https://github.com/Evryway/lir) — The Unity dependencies have been replaced with Hypar.Elements. Many many thanks to @Evryway for his work, and for making it available via the MIT license! 
 
 ### A word of warning
 This port is _not_ extensively tested — I pretty much just mapped from one API to another, so it should be used with caution. Feel free to file an issue if you find any problems. It is intended only for 2D use — the original code used Vector2s, so don't expect Vector3s with Z coordinates to respect/preserve that information.
