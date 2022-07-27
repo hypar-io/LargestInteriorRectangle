@@ -1250,11 +1250,29 @@ namespace Elements.LIR
             return false;
         }
 
-
+        /// <summary>
+        /// Compute the largest interior XY-oriented rectangle in the specified polygon
+        /// </summary>
+        /// <param name="p">The 2D polygon to test</param>
+        /// <param name="best">The best result, as a Bound2D.</param>
+        /// <returns></returns>
         public static bool CalculateLargestInteriorRectangle(Polygon p, out Bound2D best)
         {
-            CalculateInteriorCells(p.Vertices.ToArray<Vector3>(), out var xs, out var ys, out int[,] cells);
-            return CalculateLargestInteriorRectangle(xs, ys, cells, out best);
+            best = null;
+            var interiorCellsSucceeded = CalculateInteriorCells(p.Vertices.ToArray<Vector3>(), out var xs, out var ys, out int[,] cells);
+            return interiorCellsSucceeded && CalculateLargestInteriorRectangle(xs, ys, cells, out best);
+        }
+
+        /// <summary>
+        /// Compute the largest interior rectangle in the specified polygon,
+        /// testing many different angles (in a 90-degree sweep) to achieve the best result.
+        /// </summary>
+        /// <param name="p">The 2D polygon to test</param>
+        /// <param name="angleStep">The angle step size in degrees to use. The smaller the angle step, the longer this may take.</param>
+        /// <param name="best">The best result, as a Bound2D.</param>
+        public static bool CalculateLargestInteriorRectangleWithAngleSweep(Polygon p, double angleStep, out Bound2D best)
+        {
+            return CalculateLargestInteriorRectangleWithAngleSweep(p.Vertices.ToArray<Vector3>(), angleStep, out best, out _);
         }
 
         // this version does ONE lot of allocations, and tests across angles too.

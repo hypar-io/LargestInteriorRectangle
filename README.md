@@ -34,14 +34,16 @@ Polygon pgon = new Polygon
     (5,-7),
     (8,-4)
 );
+// Compute the largest XY-Aligned rectangle that can be drawn inside the polygon.
 LargestInteriorRectangle.CalculateLargestInteriorRectangle(pgon, out var best);
-var rect = best.Polygon;
+// Compute the largest rectangle that can be drawn inside the polygon at any angle.
+LargestInteriorRectangle.CalculateLargestInteriorRectangleWithAngleSweep(pgon, 1, out var best2);
 var mc = new ModelCurve(pgon, BuiltInMaterials.XAxis);
-var mc2 = new ModelCurve(rect, BuiltInMaterials.YAxis);
+var mc2 = new ModelCurve(best.Polygon, BuiltInMaterials.YAxis);
+var mc3 = new ModelCurve(best2.Polygon, BuiltInMaterials.ZAxis);
 
 var model = new Model();
-model.AddElement(mc);
-model.AddElement(mc2);
+model.AddElements(mc, mc2, mc3);
 return model;
 ```
 (See also the .NET Interactive Notebook called `UsageExample.dib` to explore interactively.)
